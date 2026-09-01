@@ -1,0 +1,83 @@
+# Configuration for data_val_search_equivalence.py (policy_db instance)
+#
+# Usage: uv run data-val-search-equivalence \
+#            --config instances/policy_db/config/data_val_search_equivalence.toml
+#
+# Captures the ordered result identities of the search tool for a fixed query
+# set against a running server. Equivalence is a two-run workflow: capture a
+# baseline BEFORE a change, capture again after, and diff the two files (the
+# `queries` arrays must match exactly). The 2026-08-26 engine/instance reorg
+# used the pair search_baseline_pre_reorg.json / search_baseline_post_reorg.json.
+#
+# Relative paths below resolve against this instance's root
+# (instances/policy_db/), not the working directory.
+
+# Required fields
+mcp_url = "http://localhost:8000/mcp"
+env_file = ".env"                   # env file the served instance was launched with
+database = "policy_db"
+output_json = "data/output/search_baseline_post_reorg.json"
+
+# Optional fields (defaults shown in comments)
+top_k = 10  # default: 10 (per-query override via top_k on a [[queries]] entry)
+
+# ~15 queries spanning the three served schemas
+[[queries]]
+schema = "cms_iom"
+query = "home health services eligibility requirements"
+
+[[queries]]
+schema = "cms_iom"
+query = "skilled nursing facility billing requirements"
+
+[[queries]]
+schema = "cms_iom"
+query = "hospice election and benefit periods"
+
+[[queries]]
+schema = "cms_iom"
+query = "ambulance transport coverage criteria"
+
+[[queries]]
+schema = "cms_iom"
+query = "telehealth services payment conditions"
+
+[[queries]]
+schema = "qpp_cm"
+query = "acute kidney injury episode-based cost measure"
+
+[[queries]]
+schema = "qpp_cm"
+query = "episode attribution to clinicians"
+
+[[queries]]
+schema = "qpp_cm"
+query = "chronic condition service assignment codes"
+
+[[queries]]
+schema = "qpp_cm"
+query = "hip fracture surgical episode trigger codes"
+
+[[queries]]
+schema = "qpp_cm"
+query = "risk adjustment for cost measures"
+
+[[queries]]
+schema = "usc"
+query = "definition of employee"
+
+[[queries]]
+schema = "usc"
+query = "civil monetary penalties for violations"
+
+[[queries]]
+schema = "usc"
+query = "eligibility for social security benefits"
+
+[[queries]]
+schema = "usc"
+query = "judicial review of agency decisions"
+
+[[queries]]
+schema = "usc"
+query = "medicare part b premium determination"

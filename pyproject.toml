@@ -1,0 +1,112 @@
+# Workspace root: coordinates the members under packages/.
+# Deliberately has no [build-system] so the root itself is never installed as a
+# package -- it exists to pin the interpreter floor, hold the shared development
+# dependencies, and constrain the model stack for every member.
+[project]
+name = "mcp_deployment"
+version = "0.1.0"
+description = "Read-only MCP database server (search + SQL tools) with its Postgres grants and descriptions"
+readme = "README.md"
+requires-python = ">=3.13"
+# The root depends on every workspace member so a plain `uv sync` at the root
+# installs the whole workspace into one shared environment (the root itself is
+# still never built or installed -- no [build-system] below).
+dependencies = [
+    "mcp-db-server",
+]
+
+[tool.uv.sources]
+mcp-db-server = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19",
+    "pytest>=9.0.2",
+    # Coverage is a standing requirement of the unit-tests skill ("Validate
+    # with pytest-cov ... investigate and address any uncovered lines"), so it
+    # belongs in the group every contributor syncs, not in an ad-hoc install.
+    "pytest-cov>=7.0",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.14",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv]
+# Inherited from the CORPUS, not from this server's own needs: the server must
+# load the exact model stack the embeddings were built with (see the "data
+# interface the server reads" section of MAINTAINING.server.md, and README.md).
+# Liftable only alongside a re-embed of every *_embedding table in the served
+# databases.
+constraint-dependencies = ["transformers<5", "torch<2.11"]
+
+[tool.pytest.ini_options]
+# Named explicitly so a bare `uv run pytest` at the repo root collects the
+# package suite rather than walking the whole tree. pytest honors testpaths
+# only when invoked FROM the rootdir; from any other directory, pass the path
+# (`uv run pytest <repo>/packages`) -- the tests import the installed
+# distribution, so they pass from anywhere.
+testpaths = ["packages"]
+
+# ---------------------------------------------------------------------------
+# Static analysis (workspace-wide: one invocation covers every member).
+# Scope discipline: these configs target the correctness-relevant rule
+# families; a lint backlog must not block correctness work (activity
+# 20260826v01, decision 13). Every deliberate exclusion carries its reason.
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+# One pass over the engine package; instances hold no Python.
+include = ["packages/**/*.py"]
+
+[tool.ruff.lint]
+# PLW1514 is a PREVIEW rule, and the gating below is load-bearing, not
+# decoration: selecting it alone answers "Selection `PLW1514` has no effect
+# because preview is not enabled" and then reports clean -- the rule looks
+# active while enforcing nothing, which is worse than not adopting it.
+# `preview` admits preview behavior; `explicit-preview-rules` narrows that to
+# the codes named in `select`, so no other preview rule arrives with it.
+preview = true
+explicit-preview-rules = true
+select = [
+    "E4",     # pycodestyle imports
+    "E7",     # pycodestyle statements
+    "E9",     # pycodestyle runtime errors
+    "F",      # pyflakes
+    "I",      # isort (import ordering)
+    "BLE",    # blind except
+    "TRY004", # type-check-without-type-error
+    "RUF",    # ruff-specific (incl. unsorted __all__, zip-instead-of-pairwise)
+    # Unspecified text encoding on open/read_text/write_text. The default is
+    # locale-dependent, so a file this repo writes on one host can be unreadable
+    # on another -- the same class of portability defect as anchoring paths to
+    # the running platform. Preview-gated; see the note above `preview`.
+    "PLW1514",
+]
+ignore = [
+    # TypeError-vs-ValueError on type checks: this codebase deliberately maps
+    # wrong-typed config values to ValueError so every config error takes one
+    # abort path; switching those raises to TypeError would change documented
+    # exit behavior, not improve it.
+    "TRY004",
+    # f-strings in logging calls are this workspace's documented convention
+    # (python-development logging skill: "Use f-strings in log calls").
+    "G004",
+]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["packages"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# TEST modules only (production code carries no blanket exclusion). The fakes
+# hand plain dicts and bare async callables to signatures typed with precise
+# ASGI protocol types and structured row shapes -- structurally identical at
+# runtime, and restating them as protocol-conformant types adds noise without
+# catching bugs.
+module = ["test_mcp_db_server"]
+disable_error_code = ["arg-type", "index"]

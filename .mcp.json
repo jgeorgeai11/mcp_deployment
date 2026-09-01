@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "policy_db": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_POLICY_DB_TOKEN}"
+      }
+    },
+    "metadata_db": {
+      "type": "http",
+      "url": "http://localhost:8002/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_METADATA_DB_TOKEN}"
+      }
+    }
+  }
+}

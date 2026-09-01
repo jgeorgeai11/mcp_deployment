@@ -1,0 +1,44 @@
+# Byte-compiled artifacts.
+__pycache__/
+*.pyc
+
+# Tool caches. Committing them ships one machine's absolute paths and
+# interpreter version to every other machine.
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Build outputs. Nothing here is source; `uv build` regenerates it.
+dist/
+
+# The virtualenv lives at .venv.nosync with .venv as a symlink to it: this
+# repo sits under an iCloud-synced ~/Documents, and iCloud skips only paths
+# ending in `.nosync`. Syncing a venv corrupts it (duplicated `lib 2/`
+# directories, hidden `.pth` files that CPython then ignores, and stale
+# console scripts) while `uv sync` reports "Audited N packages" and repairs
+# none of it, so both the symlink and its target are ignored. Recovery is in
+# MAINTAINING.server.md §7.
+.venv
+.venv.nosync/
+
+# Credentials. The pattern is deliberately `.env*` rather than the exact name
+# `.env`: a bare `.env` rule leaves `.env.backup`, `.env.local`, and
+# `instances/<name>/.env.bak` committable, which is how a real secret escapes.
+# The example files are the documented templates and carry placeholders only.
+.env*
+!.env.example
+!*.env.example
+
+# Local agent configuration -- per-machine, not part of the deployment.
+.claude/
+
+.DS_Store
+
+# Run outputs, scoped to `instances/*/` rather than bare `logs/`/`data/`: a
+# no-slash pattern matches at ANY depth, so a bare `data/` would silently
+# make a future `docs/data/` or a test fixture directory untrackable.
+instances/*/logs/
+instances/*/data/

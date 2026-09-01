@@ -1,0 +1,36 @@
+# The engine: the read-only MCP database server, packaged as one installable
+# distribution. Instances under instances/ own no code -- they are config only
+# (env file, validation config, logs), so this is the workspace's only member.
+[project]
+name = "mcp-db-server"
+version = "0.1.0"
+description = "Read-only MCP database server: schema introspection, guarded SQL, and reranked hybrid search"
+requires-python = ">=3.13"
+# einops is deliberately absent: verified 2026-08-13 that the served models
+# (ibm-granite/granite-embedding-small-english-r2 with trust_remote_code, and
+# BAAI/bge-reranker-base) load and run without it in a clean venv.
+dependencies = [
+    # <2: the server targets the 1.x FastMCP API (mcp.server.fastmcp was
+    # dropped in mcp 2.0.0); upgrading is a deliberate migration, not part
+    # of a behavior-preserving restructure.
+    "mcp>=1.26.0,<2",
+    "psycopg2-binary>=2.9.11",
+    "python-dotenv>=1.2.1",
+    "python-json-logger>=4.0.0",
+    "sentence-transformers>=5.2.2",
+    "sqlalchemy>=2.0.46",
+    # starlette is transitive via mcp but imported directly by server.py
+    # (Request/Response/ASGI types), so it is declared explicitly.
+    "starlette>=0.52.1",
+    # uvicorn is likewise transitive via mcp but imported directly by
+    # server.py's main() to serve the app, so it is declared explicitly.
+    "uvicorn>=0.34",
+]
+
+[project.scripts]
+mcp-db-server = "mcp_db_server.server:main"
+data-val-search-equivalence = "mcp_db_server.data_validation.data_val_search_equivalence:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
